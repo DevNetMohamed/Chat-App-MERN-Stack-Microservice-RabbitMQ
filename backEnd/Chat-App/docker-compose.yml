@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # ─── Infrastructure ─────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - chat-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - chat-network
+    command: redis-server --appendonly yes
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root123
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - chat-network
+
+  # ─── Microservices ────────────────────────────────
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://root:root123@mongodb:27017/users?authSource=admin
+      REDIS_URI: redis://redis:6379
+      RabbitMQ_HOST: rabbitmq
+      RabbitMQ_PORT: 5672
+      RabbitMQ_USERNAME: admin
+      RabbitMQ_PASSWORD: admin123
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+    networks:
+      - chat-network
+
+  chat-service:
+    build: ./chat-service
+    container_name: chat-service
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: 5001
+      MONGO_URI: mongodb://root:root123@mongodb:27017/chat?authSource=admin
+      REDIS_URI: redis://redis:6379
+      RabbitMQ_HOST: rabbitmq
+      RabbitMQ_PORT: 5672
+      RabbitMQ_USERNAME: admin
+      RabbitMQ_PASSWORD: admin123
+    depends_on:
+      - mongodb
+      - redis
+      - rabbitmq
+    networks:
+      - chat-network
+
+  mail-service:
+    build: ./mail-service
+    container_name: mail-service
+    ports:
+      - "5002:5002"
+    environment:
+      PORT: 5002
+      MONGO_URI: mongodb://root:root123@mongodb:27017/mail?authSource=admin
+      RabbitMQ_HOST: rabbitmq
+      RabbitMQ_PORT: 5672
+      RabbitMQ_USERNAME: admin
+      RabbitMQ_PASSWORD: admin123
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - chat-network
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+  mongo_data:
+
+networks:
+  chat-network:
+    driver: bridge
