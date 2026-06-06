@@ -1,22 +1,26 @@
-import { getChannel } from "./connection";
+import { getChannel } from "./connection.js";
 
 export const consumeEvent = async (
   queue: string,
-  callback: (data: any) => void
+  callback: (data: any) => void,
 ) => {
   const channel = getChannel();
 
   await channel.assertQueue(queue);
 
-  channel.consume(queue, (msg) => {
+  channel.consume(queue, async (msg) => {
     if (!msg) return;
 
-    const data = JSON.parse(
-      msg.content.toString()
-    );
+    try {
+      const data = JSON.parse(msg.content.toString());
 
-    callback(data);
+      await callback(data);
 
-    channel.ack(msg);
+      channel.ack(msg);
+    } catch (error) {
+      console.error(error);
+
+      channel.nack(msg, false, false);
+    }
   });
 };

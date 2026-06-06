@@ -1,4 +1,4 @@
-import { getChannel } from "./connection";
+import { getChannel } from "./connection.js";
 
 export const publishEvent = async (queue: string, data: any) => {
   const channel = getChannel();
