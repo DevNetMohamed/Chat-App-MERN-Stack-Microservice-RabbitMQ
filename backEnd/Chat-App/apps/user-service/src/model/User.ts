@@ -1,9 +1,5 @@
-import mongoose, { Document, Schema } from "mongoose";
-
-export interface IUser extends Document {
-  name: string;
-  email: string;
-}
+import mongoose, { Schema } from "mongoose";
+import type { IUser } from "@chat-app/shared";
 
 const schema: Schema<IUser> = new Schema(
   {

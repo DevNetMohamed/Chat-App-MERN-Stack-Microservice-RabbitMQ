@@ -7,7 +7,6 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   next: NextFunction,
 ): void => {
-  // If it's our custom app error, use its specific properties
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       status: "error",
@@ -16,7 +15,6 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  // Fallback for unhandled programmatic or third-party bugs
   console.error("Unexpected Error:", err);
 
   res.status(500).json({

@@ -14,7 +14,7 @@ export const consumeEvent = async (
     try {
       const data = JSON.parse(msg.content.toString());
 
-      await callback(data);
+      callback(data);
 
       channel.ack(msg);
     } catch (error) {

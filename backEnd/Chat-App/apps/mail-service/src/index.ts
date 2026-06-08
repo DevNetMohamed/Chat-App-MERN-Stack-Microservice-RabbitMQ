@@ -31,7 +31,7 @@ async function bootstrap() {
 
     const redis = redisClient();
 
-    redis.set("service", "user");
+    redis.set("service", "mail");
 
     app.listen(PORT, () => {
       console.log(`Mail Service is running on port ${PORT}`);

@@ -1,6 +1,6 @@
 import express from "express";
 import * as UserController from "../../controllers/User.js";
-import { isAuth } from "../../middleware/isAuth.js";
+import { isAuth } from "@chat-app/shared";
 const router = express.Router();
 router.post("/login", UserController.loginUser);
 router.post("/verify", UserController.VerifyUser);

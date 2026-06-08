@@ -6,7 +6,7 @@ import {
   redisClient,
 } from "@chat-app/shared";
 import { User } from "../model/User.js";
-import type { AuthenticatedRequest } from "../middleware/isAuth.js";
+import type { AuthenticatedRequest } from "@chat-app/shared";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { email } = req.body;
