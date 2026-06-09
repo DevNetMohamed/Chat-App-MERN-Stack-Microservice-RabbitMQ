@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { v2 as cloudinary } from "cloudinary";
 
 export const connectCloudinary = () => {
@@ -10,4 +12,4 @@ export const connectCloudinary = () => {
   console.log("Cloudinary connected");
 };
 
-export {cloudinary};
+export { cloudinary };

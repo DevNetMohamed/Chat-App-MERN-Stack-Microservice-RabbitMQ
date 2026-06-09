@@ -1,24 +1,30 @@
-import { Request, Response, NextFunction, ErrorRequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
 import { AppError } from "../errors/AppError.js";
-
-export const errorHandler: ErrorRequestHandler = (
-  err: Error | AppError,
+export const errorHandler = (
+  err: Error,
   req: Request,
   res: Response,
   next: NextFunction,
-): void => {
+) => {
+  console.error(" Error:", err);
+
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({
-      status: "error",
+    return res.status(err.statusCode).json({
+      success: false,
       message: err.message,
     });
-    return;
   }
 
-  console.error("Unexpected Error:", err);
+  // multer errors
+  if (err.message === "File type not allowed") {
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
 
-  res.status(500).json({
-    status: "error",
-    message: "Internal server error",
+  return res.status(500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
   });
 };

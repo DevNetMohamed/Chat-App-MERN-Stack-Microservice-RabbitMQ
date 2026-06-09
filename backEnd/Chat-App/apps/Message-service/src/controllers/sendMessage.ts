@@ -14,9 +14,6 @@ export const sendMessage = asyncHandler(
     const senderId = String(req.user?._id);
     const { chatId, text } = req.body;
     const imageFile = req.file;
-
-    console.log(imageFile);
-    console.log(req.body);
     if (!senderId) throw AppError.unauthorized("Unauthorized");
     if (!chatId) throw AppError.badRequest("chatId is required");
     if (!text && !imageFile) {
@@ -25,7 +22,6 @@ export const sendMessage = asyncHandler(
 
     const redis = redisClient();
 
-    // determine message type
     const getMessageType = (mimetype?: string) => {
       if (!mimetype) return "text";
       if (mimetype.startsWith("image/")) return "image";
@@ -48,7 +44,6 @@ export const sendMessage = asyncHandler(
       isDeleted: false,
     });
 
-    // cache latest message
     await redis.set(
       `lastMessage:${chatId}`,
       JSON.stringify({
@@ -59,7 +54,6 @@ export const sendMessage = asyncHandler(
       { ex: 60 * 60 * 24 },
     );
 
-    // get chat members — Redis first, fallback to RPC
     let members: string[] = [];
     const cachedMembers = await redis.get(`chat:${chatId}`);
 
@@ -78,14 +72,12 @@ export const sendMessage = asyncHandler(
       await redis.set(`chat:${chatId}`, JSON.stringify(users), { ex: 3600 });
     }
 
-    // increment unseen count for all members except sender
     await Promise.all(
       members
         .filter((id) => String(id) !== senderId)
         .map((userId) => redis.incr(`unseen:${chatId}:${userId}`)),
     );
 
-    // notify other services
     await publishEvent("message_created", {
       chatId,
       senderId,
@@ -93,9 +85,6 @@ export const sendMessage = asyncHandler(
       createdAt: new Date().toISOString(),
     });
 
-    return res.status(201).json({
-      success: true,
-      message,
-    });
+    return res.status(201).json({ success: true, message });
   },
 );
