@@ -11,14 +11,17 @@ import { Message } from "../models/message.js";
 
 export const sendMessage = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const senderId = String(req.user?._id);
+    const senderId = req.user?._id;
     const { chatId, text } = req.body;
     const imageFile = req.file;
+
     if (!senderId) throw AppError.unauthorized("Unauthorized");
     if (!chatId) throw AppError.badRequest("chatId is required");
     if (!text && !imageFile) {
       throw AppError.badRequest("Message must have text or media");
     }
+
+    const senderIdStr = String(senderId);
 
     const redis = redisClient();
 
@@ -31,7 +34,7 @@ export const sendMessage = asyncHandler(
 
     const message = await Message.create({
       chatId,
-      sender: senderId,
+      sender: senderIdStr,
       text: text || null,
       image: imageFile
         ? {
@@ -80,11 +83,13 @@ export const sendMessage = asyncHandler(
 
     await publishEvent("message_created", {
       chatId,
-      senderId,
+      senderId: senderIdStr,
       text: text || "Media",
       createdAt: new Date().toISOString(),
     });
 
-    return res.status(201).json({ success: true, message });
+    return res
+      .status(201)
+      .json({ success: true, message, senderId: senderIdStr });
   },
 );

@@ -11,6 +11,8 @@ export const CreateNewChat = asyncHandler(
     const userId = req.user?._id;
     const { outherUserId } = req.body;
 
+    console.log(req);
+
     if (!outherUserId) {
       throw AppError.badRequest("Another User ID is Require");
     }

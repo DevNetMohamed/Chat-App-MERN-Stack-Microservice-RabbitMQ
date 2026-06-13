@@ -19,7 +19,9 @@ async function bootstarp() {
     await unseenCountConsumer();
     connectCloudinary();
 
-    app.use("/api/v1", Router.MessageRoute);
+    app.use("/api/v1", Router.sendMessage);
+    app.use("/api/v1", Router.getMessageByChat);
+
     app.use(errorHandler);
     const port = process.env.MESSAGE_PORT;
     app.listen(port, () => {
